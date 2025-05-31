@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en" >
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Booking Confirmation Modal - Interview Scheduler</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #000;
+      color: #fff;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-backdrop {
+      background-color: rgba(0, 0, 0, 0.75);
+      position: fixed;
+      inset: 0;
+      z-index: 10;
+    }
+    .modal-content {
+      background-color: rgba(0, 0, 0, 0.9);
+      padding: 2rem;
+      border-radius: 0.5rem;
+      width: 100%;
+      max-width: 400px;
+      z-index: 20;
+      position: relative;
+    }
+  </style>
+</head>
+<body>
+  <div class="modal-backdrop"></div>
+  <div class="modal-content">
+    <h2 class="text-2xl font-semibold mb-4">Confirm Booking</h2>
+    <form id="bookingForm" class="space-y-4">
+      <div>
+        <label class="block mb-1 font-medium">Panel Name</label>
+        <input type="text" id="panelName" readonly class="w-full bg-gray-900 text-white rounded px-3 py-2" value="Alice Johnson" />
+      </div>
+      <div>
+        <label class="block mb-1 font-medium">Date & Time</label>
+        <input type="text" id="dateTime" readonly class="w-full bg-gray-900 text-white rounded px-3 py-2" value="2024-06-10 10:00 AM" />
+      </div>
+      <div>
+        <label for="candidateName" class="block mb-1 font-medium">Candidate Name</label>
+        <input type="text" id="candidateName" name="candidateName" required placeholder="Enter candidate name" class="w-full bg-gray-900 border border-gray-700 rounded px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-white" />
+      </div>
+      <div class="flex justify-end space-x-4">
+        <button type="button" id="cancelBtn" class="px-4 py-2 bg-gray-700 rounded hover:bg-gray-600 transition">Cancel</button>
+        <button type="submit" class="px-4 py-2 bg-white text-black rounded hover:bg-gray-200 transition">Confirm</button>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    const bookingForm = document.getElementById('bookingForm');
+    const cancelBtn = document.getElementById('cancelBtn');
+
+    bookingForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const candidateName = bookingForm.candidateName.value.trim();
+      if (!candidateName) {
+        alert('Please enter the candidate name.');
+        return;
+      }
+      alert('Booking confirmed for ' + candidateName);
+      // TODO: Implement booking logic and close modal
+    });
+
+    cancelBtn.addEventListener('click', () => {
+      alert('Booking cancelled');
+      // TODO: Close modal logic
+    });
+  </script>
+</body>
+</html>
