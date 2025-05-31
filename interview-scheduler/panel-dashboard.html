@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Panel Dashboard - Interview Scheduler</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #000;
+            color: #fff;
+        }
+        .scrollbar-thin::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .scrollbar-thin::-webkit-scrollbar-thumb {
+            background-color: #444;
+            border-radius: 3px;
+        }
+        .scrollbar-thin::-webkit-scrollbar-track {
+            background-color: #111;
+        }
+        .modal-backdrop {
+            background-color: rgba(0, 0, 0, 0.75);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+    <header class="flex items-center justify-between p-4 border-b border-gray-700">
+        <h1 class="text-2xl font-semibold">Panel Dashboard</h1>
+        <button id="logoutBtn" class="px-4 py-2 bg-white text-black rounded hover:bg-gray-200 transition">Logout</button>
+    </header>
+
+    <main class="flex flex-col md:flex-row flex-1 overflow-hidden">
+        <!-- Sidebar: Availability & Leave -->
+        <aside class="w-full md:w-64 p-4 border-r border-gray-700 overflow-auto scrollbar-thin space-y-6">
+            <section>
+                <h2 class="text-lg font-semibold mb-3">Add Availability Slot</h2>
+                <form id="availabilityForm" class="space-y-3">
+                    <div>
+                        <label for="availDate" class="block mb-1 font-medium">Date</label>
+                        <input type="date" id="availDate" name="availDate" required 
+                               class="w-full bg-gray-900 border border-gray-700 rounded px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-white" />
+                    </div>
+                    <div>
+                        <label for="startTime" class="block mb-1 font-medium">Start Time</label>
+                        <input type="time" id="startTime" name="startTime" required 
+                               class="w-full bg-gray-900 border border-gray-700 rounded px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-white" />
+                    </div>
+                    <div>
+                        <label for="endTime" class="block mb-1 font-medium">End Time</label>
+                        <input type="time" id="endTime" name="endTime" required 
+                               class="w-full bg-gray-900 border border-gray-700 rounded px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-white" />
+                    </div>
+                    <button type="submit" class="w-full py-2 bg-white text-black font-semibold rounded hover:bg-gray-200 transition relative">
+                        <span>Add Slot</span>
+                        <svg class="spinner hidden absolute right-4 top-1/2 -mt-2 w-4 h-4" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    </button>
+                </form>
+            </section>
+
+            <section>
+                <h2 class="text-lg font-semibold mb-3">Block Leave</h2>
+                <form id="leaveForm" class="space-y-3">
+                    <div>
+                        <label for="leaveDate" class="block mb-1 font-medium">Select Date</label>
+                        <input type="date" id="leaveDate" name="leaveDate" required 
+                               class="w-full bg-gray-900 border border-gray-700 rounded px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-white" />
+                    </div>
+                    <div>
+                        <label for="leaveReason" class="block mb-1 font-medium">Reason (optional)</label>
+                        <textarea id="leaveReason" name="leaveReason" rows="2" placeholder="Enter reason" 
+                                  class="w-full bg-gray-900 border border-gray-700 rounded px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-white resize-none"></textarea>
+                    </div>
+                    <button type="submit" class="w-full py-2 bg-white text-black font-semibold rounded hover:bg-gray-200 transition relative">
+                        <span>Block Leave</span>
+                        <svg class="spinner hidden absolute right-4 top-1/2 -mt-2 w-4 h-4" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    </button>
+                </form>
+            </section>
+        </aside>
+
+        <!-- Main Content -->
+        <section class="flex-1 p-4 overflow-auto scrollbar-thin flex flex-col">
+            <!-- Calendar -->
+            <div class="mb-6">
+                <h2 class="text-lg font-semibold mb-3">Personal Calendar</h2>
+                <div id="calendar" class="border border-gray-700 rounded bg-gray-900"></div>
+            </div>
+
+            <!-- Upcoming Bookings -->
+            <div>
+                <h2 class="text-lg font-semibold mb-3">Upcoming Bookings</h2>
+                <div id="upcomingBookings" class="space-y-2"></div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Feedback Modal -->
+    <div id="feedbackModal" class="fixed inset-0 hidden items-center justify-center z-50">
+        <div class="modal-backdrop absolute inset-0"></div>
+        <div class="bg-black bg-opacity-90 rounded-lg p-6 z-10 w-full max-w-md">
+            <h3 class="text-xl font-semibold mb-4">Submit Feedback</h3>
+            <form id="feedbackForm" class="space-y-4">
+                <div>
+                    <label class="block mb-1 font-medium">Candidate Name</label>
+                    <input type="text" id="feedbackCandidate" readonly 
+                           class="w-full bg-gray-800 text-white rounded px-3 py-2" />
+                </div>
+                <div>
+                    <label class="block mb-1 font-medium">Rating</label>
+                    <div id="ratingStars" class="flex space-x-1"></div>
+                </div>
+                <div>
+                    <label for="feedbackComments" class="block mb-1 font-medium">Comments</label>
+                    <textarea id="feedbackComments" rows="3" placeholder="Enter comments" 
+                              class="w-full bg-gray-900 border border-gray-700 rounded px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-white resize-none"></textarea>
+                </div>
+                <div class="flex justify-end space-x-4">
+                    <button type="button" id="cancelFeedbackBtn" 
+                            class="px-4 py-2 bg-gray-700 rounded hover:bg-gray-600 transition">Cancel</button>
+                    <button type="submit" 
+                            class="px-4 py-2 bg-white text-black rounded hover:bg-gray-200 transition relative">
+                        <span>Submit</span>
+                        <svg class="spinner hidden absolute right-4 top-1/2 -mt-2 w-4 h-4" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Load dependencies -->
+    <script src="/js/api.js"></script>
+    <script src="/js/utils.js"></script>
+    <script src="/js/calendar.js"></script>
+    
+    <script>
+        // Check authentication and role
+        if (!utils.initPageProtection(['panel'])) {
+            throw new Error('Unauthorized');
+        }
+
+        // Initialize components
+        document.addEventListener('DOMContentLoaded', () => {
+            const calendar = new InterviewCalendar('calendar', {
+                role: 'panel',
+                onSlotClick: handleSlotClick
+            });
+
+            const availabilityForm = document.getElementById('availabilityForm');
+            const leaveForm = document.getElementById('leaveForm');
+            const feedbackForm = document.getElementById('feedbackForm');
+            const upcomingBookings = document.getElementById('upcomingBookings');
+            let starRating = null;
+
+            // Initialize star rating in feedback form
+            starRating = utils.createStarRating('ratingStars');
+
+            // Handle availability form submission
+            availabilityForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const button = e.target.querySelector('button[type="submit"]');
+                utils.showLoading(button);
+
+                try {
+                    await api.addAvailability(
+                        availabilityForm.availDate.value,
+                        availabilityForm.startTime.value,
+                        availabilityForm.endTime.value
+                    );
+                    utils.showToast('Availability added successfully');
+                    calendar.refresh();
+                    availabilityForm.reset();
+                } catch (error) {
+                    utils.showToast(utils.formatErrorMessage(error), 'error');
+                } finally {
+                    utils.hideLoading(button);
+                }
+            });
+
+            // Handle leave form submission
+            leaveForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const button = e.target.querySelector('button[type="submit"]');
+                utils.showLoading(button);
+
+                try {
+                    // TODO: Implement leave blocking in API
+                    utils.showToast('Leave blocked successfully');
+                    calendar.refresh();
+                    leaveForm.reset();
+                } catch (error) {
+                    utils.showToast(utils.formatErrorMessage(error), 'error');
+                } finally {
+                    utils.hideLoading(button);
+                }
+            });
+
+            // Handle feedback form submission
+            feedbackForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const button = e.target.querySelector('button[type="submit"]');
+                utils.showLoading(button);
+
+                try {
+                    const bookingId = feedbackForm.dataset.bookingId;
+                    await api.submitFeedback(
+                        bookingId,
+                        starRating.getRating(),
+                        feedbackForm.feedbackComments.value.trim()
+                    );
+                    utils.showToast('Feedback submitted successfully');
+                    utils.hideModal('feedbackModal');
+                    loadUpcomingBookings();
+                } catch (error) {
+                    utils.showToast(utils.formatErrorMessage(error), 'error');
+                } finally {
+                    utils.hideLoading(button);
+                }
+            });
+
+            // Handle slot click
+            function handleSlotClick(slot) {
+                // TODO: Implement slot click handling
+                console.log('Slot clicked:', slot);
+            }
+
+            // Load upcoming bookings
+            async function loadUpcomingBookings() {
+                try {
+                    utils.showContainerLoading('upcomingBookings');
+                    const bookings = await api.getBookings();
+                    renderUpcomingBookings(bookings);
+                } catch (error) {
+                    utils.showToast(utils.formatErrorMessage(error), 'error');
+                }
+            }
+
+            // Render upcoming bookings
+            function renderUpcomingBookings(bookings) {
+                const container = document.getElementById('upcomingBookings');
+                if (!bookings || bookings.length === 0) {
+                    container.innerHTML = '<p class="text-gray-400">No upcoming bookings</p>';
+                    return;
+                }
+
+                container.innerHTML = bookings.map(booking => `
+                    <div class="bg-gray-800 p-4 rounded">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h3 class="font-semibold">${booking.candidate_name}</h3>
+                                <p class="text-sm text-gray-400">${utils.formatDate(booking.date)} at ${utils.formatTime(booking.time)}</p>
+                            </div>
+                            ${!booking.feedback ? `
+                                <button class="submit-feedback px-3 py-1 bg-white text-black rounded text-sm hover:bg-gray-200 transition"
+                                        data-booking-id="${booking.id}"
+                                        data-candidate="${booking.candidate_name}">
+                                    Submit Feedback
+                                </button>
+                            ` : ''}
+                        </div>
+                    </div>
+                `).join('');
+
+                // Add feedback button listeners
+                container.querySelectorAll('.submit-feedback').forEach(button => {
+                    button.addEventListener('click', () => {
+                        const bookingId = button.dataset.bookingId;
+                        const candidate = button.dataset.candidate;
+                        openFeedbackModal(bookingId, candidate);
+                    });
+                });
+            }
+
+            // Open feedback modal
+            function openFeedbackModal(bookingId, candidateName) {
+                feedbackForm.dataset.bookingId = bookingId;
+                document.getElementById('feedbackCandidate').value = candidateName;
+                starRating.setRating(0);
+                document.getElementById('feedbackComments').value = '';
+                utils.showModal('feedbackModal');
+            }
+
+            // Initialize logout button
+            utils.initLogoutButton();
+
+            // Cancel feedback button
+            document.getElementById('cancelFeedbackBtn').addEventListener('click', () => {
+                utils.hideModal('feedbackModal');
+            });
+
+            // Initial load
+            loadUpcomingBookings();
+        });
+    </script>
+</body>
+</html>
