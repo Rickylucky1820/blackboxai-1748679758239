@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en" >
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Shared Calendar - Interview Scheduler</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #000;
+      color: #fff;
+    }
+    .scrollbar-thin::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .scrollbar-thin::-webkit-scrollbar-thumb {
+      background-color: #444;
+      border-radius: 3px;
+    }
+    .scrollbar-thin::-webkit-scrollbar-track {
+      background-color: #111;
+    }
+    .slot {
+      cursor: pointer;
+      padding: 0.5rem 1rem;
+      border-radius: 0.375rem;
+      margin-bottom: 0.5rem;
+      user-select: none;
+      transition: background-color 0.2s ease;
+    }
+    .slot.available {
+      background-color: #22c55e; /* green */
+      color: #000;
+    }
+    .slot.booked {
+      background-color: #ef4444; /* red */
+      color: #fff;
+    }
+    .slot.leave {
+      background-color: #6b7280; /* gray */
+      color: #fff;
+    }
+    .slot:hover {
+      opacity: 0.8;
+    }
+    .tooltip {
+      position: absolute;
+      background-color: #111;
+      color: #fff;
+      padding: 0.25rem 0.5rem;
+      border-radius: 0.25rem;
+      font-size: 0.75rem;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+      z-index: 1000;
+    }
+  </style>
+</head>
+<body class="min-h-screen p-6">
+  <h1 class="text-3xl font-semibold mb-6 text-center">Shared Calendar</h1>
+
+  <div id="calendarContainer" class="max-w-md mx-auto bg-gray-900 p-6 rounded-lg shadow-lg scrollbar-thin overflow-auto" style="max-height: 400px;">
+    <!-- Slots will be rendered here -->
+  </div>
+
+  <div id="tooltip" class="tooltip"></div>
+
+  <script>
+    const calendarContainer = document.getElementById('calendarContainer');
+    const tooltip = document.getElementById('tooltip');
+
+    // Mock slots data
+    const slots = [
+      { id: 1, date: '2024-06-10', time: '10:00 AM', status: 'available', info: 'Available slot' },
+      { id: 2, date: '2024-06-10', time: '11:00 AM', status: 'booked', info: 'Booked by John Doe' },
+      { id: 3, date: '2024-06-10', time: '12:00 PM', status: 'leave', info: 'Leave' },
+      { id: 4, date: '2024-06-11', time: '09:00 AM', status: 'available', info: 'Available slot' },
+      { id: 5, date: '2024-06-11', time: '10:00 AM', status: 'booked', info: 'Booked by Jane Roe' },
+      { id: 6, date: '2024-06-11', time: '11:00 AM', status: 'leave', info: 'Leave' },
+    ];
+
+    function renderSlots() {
+      calendarContainer.innerHTML = '';
+      slots.forEach(slot => {
+        const slotDiv = document.createElement('div');
+        slotDiv.className = 'slot ' + slot.status;
+        slotDiv.textContent = slot.date + ' ' + slot.time;
+        slotDiv.dataset.info = slot.info;
+
+        slotDiv.addEventListener('mouseenter', (e) => {
+          tooltip.textContent = slot.info;
+          const rect = e.target.getBoundingClientRect();
+          tooltip.style.top = (rect.top - 30) + 'px';
+          tooltip.style.left = rect.left + 'px';
+          tooltip.style.opacity = 1;
+        });
+
+        slotDiv.addEventListener('mouseleave', () => {
+          tooltip.style.opacity = 0;
+        });
+
+        slotDiv.addEventListener('click', () => {
+          alert('Clicked slot: ' + slot.date + ' ' + slot.time + ' (' + slot.status + ')');
+          // TODO: Open booking modal for recruiter or availability edit for panel
+        });
+
+        calendarContainer.appendChild(slotDiv);
+      });
+    }
+
+    renderSlots();
+  </script>
+</body>
+</html>
