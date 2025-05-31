@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en" >
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Feedback Form Modal - Interview Scheduler</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #000;
+      color: #fff;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-backdrop {
+      background-color: rgba(0, 0, 0, 0.75);
+      position: fixed;
+      inset: 0;
+      z-index: 10;
+    }
+    .modal-content {
+      background-color: rgba(0, 0, 0, 0.9);
+      padding: 2rem;
+      border-radius: 0.5rem;
+      width: 100%;
+      max-width: 400px;
+      z-index: 20;
+      position: relative;
+    }
+    #ratingStars .star {
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: #444;
+      transition: color 0.2s ease;
+    }
+    #ratingStars .star.selected {
+      color: #facc15; /* yellow */
+    }
+  </style>
+</head>
+<body>
+  <div class="modal-backdrop"></div>
+  <div class="modal-content">
+    <h2 class="text-2xl font-semibold mb-4">Submit Feedback</h2>
+    <form id="feedbackForm" class="space-y-4">
+      <div>
+        <label for="candidateName" class="block mb-1 font-medium">Candidate Name</label>
+        <input type="text" id="candidateName" readonly class="w-full bg-gray-800 text-white rounded px-3 py-2" value="John Doe" />
+      </div>
+      <div>
+        <label class="block mb-1 font-medium">Rating</label>
+        <div id="ratingStars" class="flex space-x-1">
+          <span data-value="1" class="star">&#9733;</span>
+          <span data-value="2" class="star">&#9733;</span>
+          <span data-value="3" class="star">&#9733;</span>
+          <span data-value="4" class="star">&#9733;</span>
+          <span data-value="5" class="star">&#9733;</span>
+        </div>
+      </div>
+      <div>
+        <label for="comments" class="block mb-1 font-medium">Comments</label>
+        <textarea id="comments" rows="3" placeholder="Enter comments" class="w-full bg-gray-900 border border-gray-700 rounded px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-white resize-none"></textarea>
+      </div>
+      <div class="flex justify-end space-x-4">
+        <button type="button" id="cancelBtn" class="px-4 py-2 bg-gray-700 rounded hover:bg-gray-600 transition">Cancel</button>
+        <button type="submit" class="px-4 py-2 bg-white text-black rounded hover:bg-gray-200 transition">Submit</button>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    const stars = document.querySelectorAll('#ratingStars .star');
+    const feedbackForm = document.getElementById('feedbackForm');
+    const cancelBtn = document.getElementById('cancelBtn');
+    let selectedRating = 0;
+
+    stars.forEach(star => {
+      star.addEventListener('click', () => {
+        selectedRating = parseInt(star.getAttribute('data-value'));
+        updateStars();
+      });
+    });
+
+    function updateStars() {
+      stars.forEach(star => {
+        const starValue = parseInt(star.getAttribute('data-value'));
+        if (starValue <= selectedRating) {
+          star.classList.add('selected');
+        } else {
+          star.classList.remove('selected');
+        }
+      });
+    }
+
+    feedbackForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      if (selectedRating === 0) {
+        alert('Please select a rating.');
+        return;
+      }
+      const comments = document.getElementById('comments').value.trim();
+      alert('Feedback submitted with rating ' + selectedRating + ' and comments: ' + comments);
+      // TODO: Implement feedback submission logic and close modal
+    });
+
+    cancelBtn.addEventListener('click', () => {
+      alert('Feedback submission cancelled');
+      // TODO: Close modal logic
+    });
+  </script>
+</body>
+</html>
