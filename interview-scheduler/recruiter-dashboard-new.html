@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Recruiter Dashboard - Interview Scheduler</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #000;
+            color: #fff;
+        }
+        .loading {
+            position: relative;
+            pointer-events: none;
+        }
+        .loading::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            border-radius: inherit;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .spinner {
+            animation: spin 1s linear infinite;
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <!-- Navigation -->
+    <nav class="bg-black border-b border-gray-800 px-4 py-4">
+        <div class="container mx-auto flex justify-between items-center">
+            <h1 class="text-xl font-semibold">Interview Scheduler</h1>
+            <div class="flex items-center space-x-4">
+                <span id="userEmail" class="text-gray-400"></span>
+                <button id="logoutBtn" class="px-4 py-2 bg-white text-black rounded hover:bg-gray-200 transition">
+                    Logout
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8">
+        <!-- Stats Overview -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-gray-900 p-6 rounded-lg">
+                <h3 class="text-lg font-medium mb-2">Total Interviews</h3>
+                <p id="totalInterviews" class="text-3xl font-semibold">0</p>
+            </div>
+            <div class="bg-gray-900 p-6 rounded-lg">
+                <h3 class="text-lg font-medium mb-2">Upcoming Interviews</h3>
+                <p id="upcomingInterviews" class="text-3xl font-semibold">0</p>
+            </div>
+            <div class="bg-gray-900 p-6 rounded-lg">
+                <h3 class="text-lg font-medium mb-2">Available Panels</h3>
+                <p id="availablePanels" class="text-3xl font-semibold">0</p>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="flex justify-between items-center mb-8">
+            <h2 class="text-2xl font-semibold">Interview Schedule</h2>
+            <button 
+                id="scheduleBtn"
+                class="px-6 py-3 bg-white text-black font-semibold rounded hover:bg-gray-200 transition"
+            >
+                Schedule New Interview
+            </button>
+        </div>
+
+        <!-- Interviews Table -->
+        <div class="bg-gray-900 rounded-lg overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead>
+                        <tr class="bg-gray-800">
+                            <th class="px-6 py-4 text-left text-sm font-semibold">Candidate</th>
+                            <th class="px-6 py-4 text-left text-sm font-semibold">Panel</th>
+                            <th class="px-6 py-4 text-left text-sm font-semibold">Date</th>
+                            <th class="px-6 py-4 text-left text-sm font-semibold">Time</th>
+                            <th class="px-6 py-4 text-left text-sm font-semibold">Status</th>
+                            <th class="px-6 py-4 text-left text-sm font-semibold">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="interviewsTableBody">
+                        <!-- Interviews will be populated here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- Schedule Interview Modal -->
+    <div id="scheduleModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center">
+        <div class="bg-gray-900 p-8 rounded-lg w-full max-w-md">
+            <h2 class="text-2xl font-semibold mb-6">Schedule Interview</h2>
+            <form id="scheduleForm" class="space-y-6">
+                <div>
+                    <label for="candidateName" class="block text-sm font-medium mb-2">Candidate Name</label>
+                    <input
+                        type="text"
+                        id="candidateName"
+                        name="candidateName"
+                        required
+                        class="w-full px-4 py-2 rounded bg-gray-800 border border-gray-700 focus:outline-none focus:ring-2 focus:ring-white focus:border-white"
+                    />
+                </div>
+                <div>
+                    <label for="panelSelect" class="block text-sm font-medium mb-2">Select Panel</label>
+                    <select
+                        id="panelSelect"
+                        name="panelId"
+                        required
+                        class="w-full px-4 py-2 rounded bg-gray-800 border border-gray-700 focus:outline-none focus:ring-2 focus:ring-white focus:border-white"
+                    >
+                        <option value="">Select a panel member</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="interviewDate" class="block text-sm font-medium mb-2">Date</label>
+                    <input
+                        type="date"
+                        id="interviewDate"
+                        name="date"
+                        required
+                        class="w-full px-4 py-2 rounded bg-gray-800 border border-gray-700 focus:outline-none focus:ring-2 focus:ring-white focus:border-white"
+                    />
+                </div>
+                <div>
+                    <label for="interviewTime" class="block text-sm font-medium mb-2">Time</label>
+                    <input
+                        type="time"
+                        id="interviewTime"
+                        name="time"
+                        required
+                        class="w-full px-4 py-2 rounded bg-gray-800 border border-gray-700 focus:outline-none focus:ring-2 focus:ring-white focus:border-white"
+                    />
+                </div>
+                <div class="flex justify-end space-x-4">
+                    <button
+                        type="button"
+                        class="px-4 py-2 text-gray-400 hover:text-white transition"
+                        onclick="utils.hideModal('scheduleModal')"
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        type="submit"
+                        class="px-6 py-2 bg-white text-black font-semibold rounded hover:bg-gray-200 transition"
+                    >
+                        Schedule
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Load dependencies -->
+    <script src="/js/api.js"></script>
+    <script src="/js/utils.js"></script>
+    <script>
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Check authentication and role
+            if (!utils.initPageProtection(['recruiter'])) return;
+
+            // Initialize UI elements
+            initUI();
+            
+            // Load data
+            await loadDashboardData();
+        });
+
+        // Initialize UI elements
+        function initUI() {
+            // Display user email
+            document.getElementById('userEmail').textContent = api.getEmail();
+
+            // Initialize logout button
+            utils.initLogoutButton();
+
+            // Initialize schedule button
+            document.getElementById('scheduleBtn').addEventListener('click', () => {
+                utils.showModal('scheduleModal');
+            });
+
+            // Initialize schedule form
+            document.getElementById('scheduleForm').addEventListener('submit', handleScheduleSubmit);
+        }
+
+        // Load dashboard data
+        async function loadDashboardData() {
+            try {
+                // Show loading state
+                utils.showContainerLoading('interviewsTableBody');
+
+                // Load panels
+                const panels = await api.getPanels();
+                updatePanelSelect(panels);
+
+                // Load bookings
+                const bookings = await api.getBookings();
+                updateBookingsTable(bookings);
+                updateStats(bookings);
+            } catch (error) {
+                utils.showToast(utils.formatErrorMessage(error), 'error');
+            }
+        }
+
+        // Update panel select options
+        function updatePanelSelect(panels) {
+            const select = document.getElementById('panelSelect');
+            select.innerHTML = '<option value="">Select a panel member</option>';
+            
+            panels.forEach(panel => {
+                const option = document.createElement('option');
+                option.value = panel.id;
+                option.textContent = panel.email;
+                select.appendChild(option);
+            });
+        }
+
+        // Update bookings table
+        function updateBookingsTable(bookings) {
+            const tbody = document.getElementById('interviewsTableBody');
+            tbody.innerHTML = '';
+
+            bookings.forEach(booking => {
+                const tr = document.createElement('tr');
+                tr.className = 'border-t border-gray-800 hover:bg-gray-800/50';
+                tr.innerHTML = `
+                    <td class="px-6 py-4">${booking.candidate_name}</td>
+                    <td class="px-6 py-4">${booking.panel_email || 'N/A'}</td>
+                    <td class="px-6 py-4">${utils.formatDate(booking.date)}</td>
+                    <td class="px-6 py-4">${utils.formatTime(booking.time)}</td>
+                    <td class="px-6 py-4">
+                        <span class="px-2 py-1 text-sm rounded-full ${
+                            booking.status === 'completed' ? 'bg-green-900 text-green-200' :
+                            booking.status === 'cancelled' ? 'bg-red-900 text-red-200' :
+                            'bg-blue-900 text-blue-200'
+                        }">
+                            ${booking.status}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4">
+                        <button
+                            class="text-sm text-gray-400 hover:text-white transition"
+                            onclick="cancelBooking(${booking.id})"
+                        >
+                            Cancel
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Update dashboard stats
+        function updateStats(bookings) {
+            const now = new Date();
+            const upcoming = bookings.filter(b => new Date(`${b.date} ${b.time}`) > now).length;
+            
+            document.getElementById('totalInterviews').textContent = bookings.length;
+            document.getElementById('upcomingInterviews').textContent = upcoming;
+            document.getElementById('availablePanels').textContent = 
+                document.getElementById('panelSelect').options.length - 1;
+        }
+
+        // Handle schedule form submit
+        async function handleScheduleSubmit(e) {
+            e.preventDefault();
+            
+            const button = e.target.querySelector('button[type="submit"]');
+            utils.showLoading(button);
+
+            try {
+                const formData = new FormData(e.target);
+                await api.bookSlot(
+                    formData.get('panelId'),
+                    formData.get('candidateName'),
+                    formData.get('date'),
+                    formData.get('time')
+                );
+
+                utils.showToast('Interview scheduled successfully');
+                utils.hideModal('scheduleModal');
+                e.target.reset();
+                await loadDashboardData();
+            } catch (error) {
+                utils.showToast(utils.formatErrorMessage(error), 'error');
+            } finally {
+                utils.hideLoading(button);
+            }
+        }
+
+        // Cancel booking
+        async function cancelBooking(bookingId) {
+            if (!confirm('Are you sure you want to cancel this interview?')) return;
+
+            try {
+                await api.cancelBooking(bookingId);
+                utils.showToast('Interview cancelled successfully');
+                await loadDashboardData();
+            } catch (error) {
+                utils.showToast(utils.formatErrorMessage(error), 'error');
+            }
+        }
+    </script>
+</body>
+</html>
