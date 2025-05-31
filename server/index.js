@@ -179,6 +179,30 @@ app.post('/api/bookings', authenticateToken, async (req, res) => {
     }
 });
 
+// Update booking status
+app.put('/api/bookings/:id', authenticateToken, async (req, res) => {
+    try {
+        const bookingId = req.params.id;
+        const { status } = req.body;
+
+        // Verify booking exists and user has permission
+        const booking = await dbHelper.getBookingById(bookingId);
+        if (!booking) {
+            return res.status(404).json({ error: 'Booking not found' });
+        }
+
+        if (req.user.role !== 'recruiter' || booking.recruiter_id !== req.user.id) {
+            return res.status(403).json({ error: 'Access denied' });
+        }
+
+        await dbHelper.updateBookingStatus(bookingId, status);
+        res.json({ message: 'Booking updated successfully' });
+    } catch (error) {
+        console.error('Update booking error:', error);
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
 app.get('/api/bookings', authenticateToken, async (req, res) => {
     try {
         const bookings = await dbHelper.getBookings(req.user.id, req.user.role);
