@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Login - Interview Scheduler</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #000;
+            color: #fff;
+        }
+        .loading {
+            position: relative;
+            pointer-events: none;
+        }
+        .loading::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            border-radius: inherit;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .spinner {
+            animation: spin 1s linear infinite;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center px-4">
+    <main class="w-full max-w-md">
+        <!-- Error Message -->
+        <div id="errorMessage" class="mb-4 p-4 bg-red-900 text-white rounded-lg hidden"></div>
+
+        <!-- Login Form -->
+        <div class="bg-black bg-opacity-80 p-8 rounded-lg shadow-lg">
+            <h1 class="text-3xl font-semibold mb-6 text-center">Login</h1>
+            <form id="loginForm" class="space-y-6" autocomplete="off" novalidate>
+                <div>
+                    <label for="email" class="block mb-2 text-sm font-medium">Email</label>
+                    <input
+                        type="email"
+                        id="email"
+                        name="email"
+                        required
+                        placeholder="you@example.com"
+                        class="w-full px-4 py-2 rounded bg-gray-900 border border-gray-700 focus:outline-none focus:ring-2 focus:ring-white focus:border-white transition"
+                    />
+                </div>
+                <div>
+                    <label for="password" class="block mb-2 text-sm font-medium">Password</label>
+                    <input
+                        type="password"
+                        id="password"
+                        name="password"
+                        required
+                        placeholder="••••••••"
+                        class="w-full px-4 py-2 rounded bg-gray-900 border border-gray-700 focus:outline-none focus:ring-2 focus:ring-white focus:border-white transition"
+                    />
+                </div>
+                <fieldset class="space-y-2">
+                    <legend class="text-sm font-medium">Role</legend>
+                    <div class="flex flex-wrap gap-4">
+                        <label class="inline-flex items-center">
+                            <input type="radio" name="role" value="recruiter" required class="form-radio text-white" />
+                            <span class="ml-2">Recruiter</span>
+                        </label>
+                        <label class="inline-flex items-center">
+                            <input type="radio" name="role" value="panel" required class="form-radio text-white" />
+                            <span class="ml-2">Panel</span>
+                        </label>
+                        <label class="inline-flex items-center">
+                            <input type="radio" name="role" value="admin" required class="form-radio text-white" />
+                            <span class="ml-2">Admin</span>
+                        </label>
+                    </div>
+                </fieldset>
+                <button
+                    type="submit"
+                    class="w-full py-3 bg-white text-black font-semibold rounded hover:bg-gray-200 transition relative"
+                >
+                    <span>Login</span>
+                    <svg class="spinner hidden absolute right-4 top-1/2 -mt-2 w-4 h-4" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                </button>
+            </form>
+            <p class="mt-6 text-center text-sm text-gray-400">
+                Don't have an account?
+                <a href="/register.html" class="text-white underline hover:text-gray-300">Register</a>
+            </p>
+        </div>
+    </main>
+
+    <!-- Load dependencies -->
+    <script src="/js/api.js"></script>
+    <script src="/js/utils.js"></script>
+    <script src="/js/auth.js"></script>
+    <script>
+        // Initialize login form
+        document.addEventListener('DOMContentLoaded', () => {
+            // Check if already logged in
+            if (api.isAuthenticated()) {
+                const role = api.getRole();
+                auth.handleLoginSuccess({ role, token: api.getToken() });
+                return;
+            }
+
+            // Initialize login form
+            auth.initLoginForm();
+        });
+    </script>
+</body>
+</html>
