@@ -169,6 +169,32 @@ const dbHelper = {
         });
     },
 
+    async getBookingById(bookingId) {
+        return new Promise((resolve, reject) => {
+            db.get(
+                'SELECT * FROM bookings WHERE id = ?',
+                [bookingId],
+                (err, row) => {
+                    if (err) reject(err);
+                    else resolve(row);
+                }
+            );
+        });
+    },
+
+    async updateBookingStatus(bookingId, status) {
+        return new Promise((resolve, reject) => {
+            db.run(
+                'UPDATE bookings SET status = ? WHERE id = ?',
+                [status, bookingId],
+                function(err) {
+                    if (err) reject(err);
+                    else resolve(this.changes);
+                }
+            );
+        });
+    },
+
     async findPanels() {
         return new Promise((resolve, reject) => {
             db.all(
