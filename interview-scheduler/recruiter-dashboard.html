@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Recruiter Dashboard - Interview Scheduler</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #000;
+            color: #fff;
+        }
+        .scrollbar-thin::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .scrollbar-thin::-webkit-scrollbar-thumb {
+            background-color: #444;
+            border-radius: 3px;
+        }
+        .scrollbar-thin::-webkit-scrollbar-track {
+            background-color: #111;
+        }
+        .modal-backdrop {
+            background-color: rgba(0, 0, 0, 0.75);
+        }
+        .tag {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            background-color: #374151;
+            color: #fff;
+            margin: 0.25rem;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+    <header class="flex items-center justify-between p-4 border-b border-gray-700">
+        <h1 class="text-2xl font-semibold">Recruiter Dashboard</h1>
+        <button id="logoutBtn" class="px-4 py-2 bg-white text-black rounded hover:bg-gray-200 transition">Logout</button>
+    </header>
+
+    <main class="flex flex-col md:flex-row flex-1 overflow-hidden">
+        <!-- Sidebar: Panel Filters -->
+        <aside class="w-full md:w-64 p-4 border-r border-gray-700 overflow-auto scrollbar-thin">
+            <section class="space-y-4">
+                <h2 class="text-lg font-semibold">Filter Panels</h2>
+                
+                <!-- Skills Filter -->
+                <div>
+                    <label class="block mb-2 text-sm font-medium">Skills Required</label>
+                    <div id="selectedSkills" class="mb-2 min-h-8"></div>
+                    <select id="skillSelect" class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white focus:outline-none focus:ring-2 focus:ring-white">
+                        <option value="">Select a skill...</option>
+                        <option value="Java">Java</option>
+                        <option value="Python">Python</option>
+                        <option value="JavaScript">JavaScript</option>
+                        <option value="React">React</option>
+                        <option value="Node.js">Node.js</option>
+                        <option value="SQL">SQL</option>
+                        <option value="System Design">System Design</option>
+                        <option value="Data Structures">Data Structures</option>
+                        <option value="Algorithms">Algorithms</option>
+                    </select>
+                </div>
+
+                <!-- Experience Level -->
+                <div>
+                    <label class="block mb-2 text-sm font-medium">Experience Level</label>
+                    <select id="experienceSelect" class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white focus:outline-none focus:ring-2 focus:ring-white">
+                        <option value="">Any Experience</option>
+                        <option value="junior">Junior (0-2 years)</option>
+                        <option value="mid">Mid-Level (3-5 years)</option>
+                        <option value="senior">Senior (6+ years)</option>
+                    </select>
+                </div>
+
+                <!-- Availability -->
+                <div>
+                    <label class="block mb-2 text-sm font-medium">Availability</label>
+                    <select id="availabilitySelect" class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white focus:outline-none focus:ring-2 focus:ring-white">
+                        <option value="">Any Time</option>
+                        <option value="morning">Morning (9 AM - 12 PM)</option>
+                        <option value="afternoon">Afternoon (1 PM - 5 PM)</option>
+                        <option value="evening">Evening (6 PM - 9 PM)</option>
+                    </select>
+                </div>
+
+                <button id="applyFiltersBtn" class="w-full py-2 bg-white text-black font-semibold rounded hover:bg-gray-200 transition">
+                    Apply Filters
+                </button>
+            </section>
+        </aside>
+
+        <!-- Main Content -->
+        <section class="flex-1 p-4 overflow-auto scrollbar-thin flex flex-col">
+            <!-- Panel List -->
+            <div class="mb-6">
+                <h2 class="text-lg font-semibold mb-3">Available Panels</h2>
+                <div id="panelList" class="space-y-4"></div>
+            </div>
+
+            <!-- Calendar -->
+            <div class="mb-6">
+                <h2 class="text-lg font-semibold mb-3">Interview Schedule</h2>
+                <div id="calendar" class="border border-gray-700 rounded bg-gray-900"></div>
+            </div>
+
+            <!-- My Bookings -->
+            <div>
+                <h2 class="text-lg font-semibold mb-3">My Bookings</h2>
+                <div id="myBookings" class="space-y-2"></div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Booking Modal -->
+    <div id="bookingModal" class="fixed inset-0 hidden items-center justify-center z-50">
+        <div class="modal-backdrop absolute inset-0"></div>
+        <div class="bg-black bg-opacity-90 rounded-lg p-6 z-10 w-full max-w-md">
+            <h3 class="text-xl font-semibold mb-4">Book Interview</h3>
+            <form id="bookingForm" class="space-y-4">
+                <div>
+                    <label class="block mb-1 font-medium">Panel Member</label>
+                    <input type="text" id="bookingPanel" readonly class="w-full bg-gray-800 text-white rounded px-3 py-2" />
+                </div>
+                <div>
+                    <label class="block mb-1 font-medium">Date & Time</label>
+                    <input type="text" id="bookingDateTime" readonly class="w-full bg-gray-800 text-white rounded px-3 py-2" />
+                </div>
+                <div>
+                    <label for="candidateName" class="block mb-1 font-medium">Candidate Name</label>
+                    <input type="text" id="candidateName" required placeholder="Enter candidate name" 
+                           class="w-full bg-gray-900 border border-gray-700 rounded px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-white" />
+                </div>
+                <div>
+                    <label for="candidateEmail" class="block mb-1 font-medium">Candidate Email</label>
+                    <input type="email" id="candidateEmail" required placeholder="candidate@example.com" 
+                           class="w-full bg-gray-900 border border-gray-700 rounded px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-white" />
+                </div>
+                <div class="flex justify-end space-x-4">
+                    <button type="button" id="cancelBookingBtn" 
+                            class="px-4 py-2 bg-gray-700 rounded hover:bg-gray-600 transition">Cancel</button>
+                    <button type="submit" 
+                            class="px-4 py-2 bg-white text-black rounded hover:bg-gray-200 transition relative">
+                        <span>Confirm Booking</span>
+                        <svg class="spinner hidden absolute right-4 top-1/2 -mt-2 w-4 h-4" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Load dependencies -->
+    <script src="/js/api.js"></script>
+    <script src="/js/utils.js"></script>
+    <script src="/js/calendar.js"></script>
+    
+    <script>
+        // Check authentication and role
+        if (!utils.initPageProtection(['recruiter'])) {
+            throw new Error('Unauthorized');
+        }
+
+        // Initialize components
+        document.addEventListener('DOMContentLoaded', () => {
+            const selectedSkills = new Set();
+            const calendar = new InterviewCalendar('calendar', {
+                role: 'recruiter',
+                onSlotClick: handleSlotClick
+            });
+
+            const skillSelect = document.getElementById('skillSelect');
+            const selectedSkillsContainer = document.getElementById('selectedSkills');
+            const applyFiltersBtn = document.getElementById('applyFiltersBtn');
+            const bookingForm = document.getElementById('bookingForm');
+            let selectedPanel = null;
+            let selectedDateTime = null;
+
+            // Handle skill selection
+            skillSelect.addEventListener('change', () => {
+                const skill = skillSelect.value;
+                if (skill && !selectedSkills.has(skill)) {
+                    selectedSkills.add(skill);
+                    renderSelectedSkills();
+                }
+                skillSelect.value = '';
+            });
+
+            // Render selected skills
+            function renderSelectedSkills() {
+                selectedSkillsContainer.innerHTML = Array.from(selectedSkills).map(skill => `
+                    <span class="tag">
+                        ${skill}
+                        <button class="ml-1 text-gray-400 hover:text-white" data-skill="${skill}">&times;</button>
+                    </span>
+                `).join('');
+
+                // Add remove button listeners
+                selectedSkillsContainer.querySelectorAll('button').forEach(button => {
+                    button.addEventListener('click', (e) => {
+                        const skill = e.target.dataset.skill;
+                        selectedSkills.delete(skill);
+                        renderSelectedSkills();
+                    });
+                });
+            }
+
+            // Handle filter application
+            applyFiltersBtn.addEventListener('click', loadPanels);
+
+            // Load panels with filters
+            async function loadPanels() {
+                try {
+                    utils.showContainerLoading('panelList');
+                    const panels = await api.getPanels();
+                    renderPanels(filterPanels(panels));
+                } catch (error) {
+                    utils.showToast(utils.formatErrorMessage(error), 'error');
+                }
+            }
+
+            // Filter panels based on selected criteria
+            function filterPanels(panels) {
+                if (selectedSkills.size === 0) return panels;
+                return panels.filter(panel => 
+                    Array.from(selectedSkills).every(skill => 
+                        panel.skills && panel.skills.includes(skill)
+                    )
+                );
+            }
+
+            // Render panels
+            function renderPanels(panels) {
+                const container = document.getElementById('panelList');
+                if (!panels || panels.length === 0) {
+                    container.innerHTML = '<p class="text-gray-400">No panels match the selected criteria</p>';
+                    return;
+                }
+
+                container.innerHTML = panels.map(panel => `
+                    <div class="bg-gray-800 p-4 rounded">
+                        <div class="flex justify-between items-start mb-2">
+                            <h3 class="font-semibold">${panel.name || panel.email}</h3>
+                            <button class="view-availability px-3 py-1 bg-white text-black rounded text-sm hover:bg-gray-200 transition"
+                                    data-panel-id="${panel.id}">
+                                View Availability
+                            </button>
+                        </div>
+                        ${panel.skills ? `
+                            <div class="text-sm text-gray-400">
+                                Skills: ${panel.skills.join(', ')}
+                            </div>
+                        ` : ''}
+                    </div>
+                `).join('');
+
+                // Add availability button listeners
+                container.querySelectorAll('.view-availability').forEach(button => {
+                    button.addEventListener('click', () => {
+                        const panelId = button.dataset.panelId;
+                        viewPanelAvailability(panelId);
+                    });
+                });
+            }
+
+            // View panel availability
+            async function viewPanelAvailability(panelId) {
+                try {
+                    const availability = await api.getPanelAvailability(panelId);
+                    calendar.setDate(new Date());
+                    calendar.loadSlots(availability);
+                } catch (error) {
+                    utils.showToast(utils.formatErrorMessage(error), 'error');
+                }
+            }
+
+            // Handle slot click
+            function handleSlotClick(slot) {
+                selectedPanel = slot.panel;
+                selectedDateTime = `${slot.date} ${slot.time}`;
+                document.getElementById('bookingPanel').value = selectedPanel.name || selectedPanel.email;
+                document.getElementById('bookingDateTime').value = selectedDateTime;
+                utils.showModal('bookingModal');
+            }
+
+            // Handle booking form submission
+            bookingForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const button = e.target.querySelector('button[type="submit"]');
+                utils.showLoading(button);
+
+                try {
+                    await api.bookSlot(
+                        selectedPanel.id,
+                        bookingForm.candidateName.value.trim(),
+                        selectedDateTime.split(' ')[0],
+                        selectedDateTime.split(' ')[1]
+                    );
+                    utils.showToast('Interview booked successfully');
+                    utils.hideModal('bookingModal');
+                    loadMyBookings();
+                    calendar.refresh();
+                } catch (error) {
+                    utils.showToast(utils.formatErrorMessage(error), 'error');
+                } finally {
+                    utils.hideLoading(button);
+                }
+            });
+
+            // Load my bookings
+            async function loadMyBookings() {
+                try {
+                    utils.showContainerLoading('myBookings');
+                    const bookings = await api.getBookings();
+                    renderMyBookings(bookings);
+                } catch (error) {
+                    utils.showToast(utils.formatErrorMessage(error), 'error');
+                }
+            }
+
+            // Render my bookings
+            function renderMyBookings(bookings) {
+                const container = document.getElementById('myBookings');
+                if (!bookings || bookings.length === 0) {
+                    container.innerHTML = '<p class="text-gray-400">No bookings found</p>';
+                    return;
+                }
+
+                container.innerHTML = bookings.map(booking => `
+                    <div class="bg-gray-800 p-4 rounded">
+                        <h3 class="font-semibold">${booking.candidate_name}</h3>
+                        <p class="text-sm text-gray-400">
+                            ${utils.formatDate(booking.date)} at ${utils.formatTime(booking.time)}
+                            with ${booking.panel_name || 'Panel #' + booking.panel_id}
+                        </p>
+                    </div>
+                `).join('');
+            }
+
+            // Cancel booking button
+            document.getElementById('cancelBookingBtn').addEventListener('click', () => {
+                utils.hideModal('bookingModal');
+            });
+
+            // Initialize logout button
+            utils.initLogoutButton();
+
+            // Initial load
+            loadPanels();
+            loadMyBookings();
+        });
+    </script>
+</body>
+</html>
