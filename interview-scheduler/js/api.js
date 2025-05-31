@@ -147,10 +147,28 @@ const api = {
         return data;
     },
 
+    // Cancel booking
+    async cancelBooking(bookingId) {
+        const response = await fetch(`${API_BASE_URL}/bookings/${bookingId}`, {
+            method: 'PUT',
+            headers: this.headers(),
+            body: JSON.stringify({ status: 'cancelled' })
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Failed to cancel booking');
+        return data;
+    },
+
+    // Get user email
+    getEmail() {
+        return localStorage.getItem('email') || 'Unknown User';
+    },
+
     // Logout
     logout() {
         localStorage.removeItem('token');
         localStorage.removeItem('role');
+        localStorage.removeItem('email');
         window.location.href = '/login.html';
     }
 };
